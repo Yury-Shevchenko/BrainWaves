@@ -9,7 +9,7 @@ import {
   Divider,
   Button,
   Checkbox,
-  Sidebar,
+  Sidebar
 } from 'semantic-ui-react';
 import { isNil } from 'lodash';
 import Plot from 'react-plotly.js';
@@ -17,41 +17,37 @@ import styles from './styles/common.css';
 import {
   DEVICES,
   MUSE_CHANNELS,
-  EMOTIV_CHANNELS,
-  KERNEL_STATUS,
-  EXPERIMENTS,
+  EMOTIV_CHANNELS
 } from '../constants/constants';
 import {
   readWorkspaceCleanedEEGData,
   getSubjectNamesFromFiles,
   readWorkspaceBehaviorData,
   readBehaviorData,
-  storeAggregatedBehaviorData,
+  storeAggregatedBehaviorData
 } from '../utils/filesystem/storage';
-import { aggregateDataForPlot, aggregateBehaviorDataToSave } from '../utils/behavior/compute';
+import {
+  aggregateDataForPlot,
+  aggregateBehaviorDataToSave
+} from '../utils/behavior/compute';
 import SecondaryNavComponent from './SecondaryNavComponent';
 import ClickableHeadDiagramSVG from './svgs/ClickableHeadDiagramSVG';
 import JupyterPlotWidget from './JupyterPlotWidget';
-import { HelpButton } from './CollectComponent/HelpSidebar';
+import HelpSidebar from './CollectComponent/HelpSidebar';
 
 const ANALYZE_STEPS = {
   OVERVIEW: 'OVERVIEW',
   ERP: 'ERP',
-  BEHAVIOR: 'BEHAVIOR',
+  BEHAVIOR: 'BEHAVIOR'
 };
 
 const ANALYZE_STEPS_BEHAVIOR = {
-  BEHAVIOR: 'BEHAVIOR',
+  BEHAVIOR: 'BEHAVIOR'
 };
 
 interface Props {
   title: string;
-  type: ?EXPERIMENTS;
   deviceType: DEVICES;
-  isEEGEnabled: boolean;
-  kernel: ?Kernel;
-  kernelStatus: KERNEL_STATUS;
-  mainChannel: ?any;
   epochsInfo: ?Array<{ [string]: number | string }>;
   channelInfo: ?Array<string>;
   psdPlot: ?{ [string]: string };
@@ -66,12 +62,12 @@ interface State {
   eegFilePaths: Array<?{
     key: string,
     text: string,
-    value: { name: string, dir: string },
+    value: { name: string, dir: string }
   }>;
   behaviorFilePaths: Array<?{
     key: string,
     text: string,
-    value: string,
+    value: string
   }>;
   selectedFilePaths: Array<?string>;
   selectedBehaviorFilePaths: Array<?string>;
@@ -86,7 +82,7 @@ interface State {
   dependentVariables: Array<?{
     key: string,
     text: string,
-    value: string,
+    value: string
   }>;
 }
 // TODO: Add a channel callback from reading epochs so this screen can be aware of which channels are
@@ -94,13 +90,13 @@ interface State {
 export default class Analyze extends Component<Props, State> {
   props: Props;
   state: State;
-  handleChannelSelect: (string) => void;
+  handleChannelSelect: string => void;
   handleStepClick: (Object, Object) => void;
   handleDatasetChange: (Object, Object) => void;
   handleBehaviorDatasetChange: (Object, Object) => void;
   handleDependentVariableChange: (Object, Object) => void;
   handleRemoveOutliers: (Object, Object) => void;
-  handleDisplayModeChange: (string) => void;
+  handleDisplayModeChange: string => void;
   handleDataPoints: (Object, Object) => void;
   saveSelectedDatasets: () => void;
   handleStepClick: (Object, Object) => void;
@@ -109,8 +105,9 @@ export default class Analyze extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      activeStep:
-        this.props.isEEGEnabled === true ? ANALYZE_STEPS.OVERVIEW : ANALYZE_STEPS.BEHAVIOR,
+      activeStep: this.props.isEEGEnabled === true
+        ? ANALYZE_STEPS.OVERVIEW
+        : ANALYZE_STEPS.BEHAVIOR,
       eegFilePaths: [{ key: '', text: '', value: '' }],
       behaviorFilePaths: [{ key: '', text: '', value: '' }],
       dependentVariables: [{ key: '', text: '', value: '' }],
@@ -126,44 +123,52 @@ export default class Analyze extends Component<Props, State> {
       selectedFilePaths: [],
       selectedBehaviorFilePaths: [],
       selectedSubjects: [],
-      selectedChannel: props.deviceType === DEVICES.EMOTIV ? EMOTIV_CHANNELS[0] : MUSE_CHANNELS[0],
+      selectedChannel:
+        props.deviceType === DEVICES.EMOTIV
+          ? EMOTIV_CHANNELS[0]
+          : MUSE_CHANNELS[0]
     };
     this.handleChannelSelect = this.handleChannelSelect.bind(this);
     this.handleDatasetChange = this.handleDatasetChange.bind(this);
-    this.handleBehaviorDatasetChange = this.handleBehaviorDatasetChange.bind(this);
-    this.handleDependentVariableChange = this.handleDependentVariableChange.bind(this);
+    this.handleBehaviorDatasetChange = this.handleBehaviorDatasetChange.bind(
+      this
+    );
+    this.handleDependentVariableChange = this.handleDependentVariableChange.bind(
+      this
+    );
     this.handleRemoveOutliers = this.handleRemoveOutliers.bind(this);
     this.handleDisplayModeChange = this.handleDisplayModeChange.bind(this);
     this.handleDataPoints = this.handleDataPoints.bind(this);
     this.saveSelectedDatasets = this.saveSelectedDatasets.bind(this);
     this.handleStepClick = this.handleStepClick.bind(this);
     this.handleDropdownClick = this.handleDropdownClick.bind(this);
-    this.toggleDisplayInfoVisibility = this.toggleDisplayInfoVisibility.bind(this);
+    this.toggleDisplayInfoVisibility = this.toggleDisplayInfoVisibility.bind(
+      this
+    );
   }
 
   async componentDidMount() {
-    const workspaceCleanData = await readWorkspaceCleanedEEGData(this.props.title);
-    if (this.props.kernelStatus === KERNEL_STATUS.OFFLINE) {
-      this.props.jupyterActions.launchKernel();
-    }
+    const workspaceCleanData = await readWorkspaceCleanedEEGData(
+      this.props.title
+    );
     const behavioralData = await readWorkspaceBehaviorData(this.props.title);
     this.setState({
-      eegFilePaths: workspaceCleanData.map((filepath) => ({
+      eegFilePaths: workspaceCleanData.map(filepath => ({
         key: filepath.name,
         text: filepath.name,
-        value: filepath.path,
+        value: filepath.path
       })),
-      behaviorFilePaths: behavioralData.map((filepath) => ({
+      behaviorFilePaths: behavioralData.map(filepath => ({
         key: filepath.name,
         text: filepath.name,
-        value: filepath.path,
+        value: filepath.path
       })),
-      dependentVariables: ['Response Time', 'Accuracy'].map((dv) => ({
+      dependentVariables: ['Response Time', 'Accuracy'].map(dv => ({
         key: dv,
         text: dv,
-        value: dv,
+        value: dv
       })),
-      selectedDependentVariable: 'Response Time',
+      selectedDependentVariable: 'Response Time'
     });
   }
 
@@ -174,7 +179,7 @@ export default class Analyze extends Component<Props, State> {
   handleDatasetChange(event: Object, data: Object) {
     this.setState({
       selectedFilePaths: data.value,
-      selectedSubjects: getSubjectNamesFromFiles(data.value),
+      selectedSubjects: getSubjectNamesFromFiles(data.value)
     });
     this.props.jupyterActions.loadCleanedEpochs(data.value);
   }
@@ -191,7 +196,7 @@ export default class Analyze extends Component<Props, State> {
       selectedBehaviorFilePaths: data.value,
       selectedSubjects: getSubjectNamesFromFiles(data.value),
       dataToPlot,
-      layout,
+      layout
     });
   }
 
@@ -199,11 +204,11 @@ export default class Analyze extends Component<Props, State> {
     const behavioralData = await readWorkspaceBehaviorData(this.props.title);
     if (behavioralData.length != this.state.behaviorFilePaths.length) {
       this.setState({
-        behaviorFilePaths: behavioralData.map((filepath) => ({
+        behaviorFilePaths: behavioralData.map(filepath => ({
           key: filepath.name,
           text: filepath.name,
-          value: filepath.path,
-        })),
+          value: filepath.path
+        }))
       });
     }
   }
@@ -219,7 +224,7 @@ export default class Analyze extends Component<Props, State> {
     this.setState({
       selectedDependentVariable: data.value,
       dataToPlot,
-      layout,
+      layout
     });
   }
 
@@ -235,7 +240,7 @@ export default class Analyze extends Component<Props, State> {
       removeOutliers: !this.state.removeOutliers,
       dataToPlot,
       layout,
-      helpMode: 'outliers',
+      helpMode: 'outliers'
     });
   }
 
@@ -250,12 +255,15 @@ export default class Analyze extends Component<Props, State> {
     this.setState({
       showDataPoints: !this.state.showDataPoints,
       dataToPlot,
-      layout,
+      layout
     });
   }
 
   handleDisplayModeChange(displayMode) {
-    if (this.state.selectedBehaviorFilePaths && this.state.selectedBehaviorFilePaths.length > 0) {
+    if (
+      this.state.selectedBehaviorFilePaths &&
+      this.state.selectedBehaviorFilePaths.length > 0
+    ) {
       const { dataToPlot, layout } = aggregateDataForPlot(
         readBehaviorData(this.state.selectedBehaviorFilePaths),
         this.state.selectedDependentVariable,
@@ -267,20 +275,23 @@ export default class Analyze extends Component<Props, State> {
         dataToPlot,
         layout,
         displayMode,
-        helpMode: displayMode,
+        helpMode: displayMode
       });
     }
   }
 
   toggleDisplayInfoVisibility() {
     this.setState({
-      isSidebarVisible: !this.state.isSidebarVisible,
+      isSidebarVisible: !this.state.isSidebarVisible
     });
   }
 
   saveSelectedDatasets() {
     const data = readBehaviorData(this.state.selectedBehaviorFilePaths);
-    const aggregatedData = aggregateBehaviorDataToSave(data, this.state.removeOutliers);
+    const aggregatedData = aggregateBehaviorDataToSave(
+      data,
+      this.state.removeOutliers
+    );
     storeAggregatedBehaviorData(aggregatedData, this.props.title);
   }
 
@@ -289,26 +300,29 @@ export default class Analyze extends Component<Props, State> {
     this.props.jupyterActions.loadERP(channelName);
   }
 
-  concatSubjectNames = (subjects: Array<?string>) => {
+  concatSubjectNames(subjects: Array<?string>) {
     if (subjects.length < 1) {
       return '';
     }
     return subjects.reduce((acc, curr) => `${acc}-${curr}`);
-  };
+  }
 
   renderEpochLabels() {
-    if (!isNil(this.props.epochsInfo) && this.state.selectedFilePaths.length >= 1) {
+    if (
+      !isNil(this.props.epochsInfo) &&
+      this.state.selectedFilePaths.length >= 1
+    ) {
       return (
         <div>
           {this.props.epochsInfo
+            .filter( infoObj => (infoObj.name !== 'Drop Percentage' && infoObj.name !== 'Total Epochs'))
             .map((infoObj, index) => (
               <React.Fragment key={infoObj.name}>
-                <Header as='h4'>{infoObj.name}</Header>
-                <Icon name='circle' color={['red', 'green'][index]} />
+                <Header as="h4">{infoObj.name}</Header>
+                <Icon name="circle" color={['red', 'orange', 'green', 'blue'][index]} />
                 {infoObj.value}
               </React.Fragment>
-            ))
-            .slice(0, 2)}
+            ))}
         </div>
       );
     }
@@ -365,13 +379,13 @@ export default class Analyze extends Component<Props, State> {
         <Segment basic className={styles.helpContent}>
           <Button
             circular
-            size='large'
-            floated='right'
-            icon='x'
+            size="large"
+            floated="right"
+            icon="x"
             className={styles.closeButton}
             onClick={this.toggleDisplayInfoVisibility}
           />
-          <Header className={styles.helpHeader} as='h1'>
+          <Header className={styles.helpHeader} as="h1">
             {header}
           </Header>
           {content}
@@ -385,15 +399,20 @@ export default class Analyze extends Component<Props, State> {
       case ANALYZE_STEPS.OVERVIEW:
       default:
         return (
-          <React.Fragment>
+          <Grid
+            columns="equal"
+            textAlign="center"
+            verticalAlign="middle"
+            className={styles.contentGrid}
+          >
             <Grid.Column width={4}>
-              <Segment basic textAlign='left' className={styles.infoSegment}>
-                <Header as='h1'>Overview</Header>
+              <Segment basic textAlign="left" className={styles.infoSegment}>
+                <Header as="h1">Overview</Header>
                 <p>
-                  Load cleaned datasets from different subjects and view how the EEG differs between
-                  electrodes
+                  Load cleaned datasets from different subjects and view how the
+                  EEG differs between electrodes
                 </p>
-                <Header as='h4'>Select Clean Datasets</Header>
+                <Header as="h4">Select Clean Datasets</Header>
                 <Dropdown
                   fluid
                   multiple
@@ -403,27 +422,35 @@ export default class Analyze extends Component<Props, State> {
                   options={this.state.eegFilePaths}
                   onChange={this.handleDatasetChange}
                 />
+                <Divider hidden />
                 {this.renderEpochLabels()}
               </Segment>
             </Grid.Column>
             <Grid.Column width={8}>
               <JupyterPlotWidget
                 title={this.props.title}
-                imageTitle={`${this.concatSubjectNames(this.state.selectedSubjects)}-Topoplot`}
+                imageTitle={`${this.concatSubjectNames(
+                  this.state.selectedSubjects
+                )}-Topoplot`}
                 plotMIMEBundle={this.props.topoPlot}
               />
             </Grid.Column>
-          </React.Fragment>
+          </Grid>
         );
       case ANALYZE_STEPS.ERP:
         return (
-          <React.Fragment>
+          <Grid
+            columns="equal"
+            textAlign="center"
+            verticalAlign="middle"
+            className={styles.contentGrid}
+          >
             <Grid.Column width={4} className={styles.analyzeColumn}>
-              <Segment basic textAlign='left' className={styles.infoSegment}>
-                <Header as='h1'>ERP</Header>
+              <Segment basic textAlign="left" className={styles.infoSegment}>
+                <Header as="h1">ERP</Header>
                 <p>
-                  The event-related potential represents EEG activity elicited by a particular
-                  sensory event
+                  The event-related potential represents EEG activity elicited
+                  by a particular sensory event
                 </p>
                 <ClickableHeadDiagramSVG
                   channelinfo={this.props.channelInfo}
@@ -436,30 +463,41 @@ export default class Analyze extends Component<Props, State> {
             <Grid.Column width={8}>
               <JupyterPlotWidget
                 title={this.props.title}
-                imageTitle={`${this.concatSubjectNames(this.state.selectedSubjects)}-${
-                  this.state.selectedChannel
-                }-ERP`}
+                imageTitle={`${this.concatSubjectNames(
+                  this.state.selectedSubjects
+                )}-${this.state.selectedChannel}-ERP`}
                 plotMIMEBundle={this.props.erpPlot}
               />
             </Grid.Column>
-          </React.Fragment>
+          </Grid>
         );
       case ANALYZE_STEPS.BEHAVIOR:
         return (
-          <React.Fragment>
+          <Grid
+            columns="equal"
+            textAlign="center"
+            verticalAlign="middle"
+            className={styles.contentGrid}
+          >
             <Grid.Column width={6}>
-              <Segment basic textAlign='left' className={styles.infoSegment}>
-                <Header as='h1'>Overview</Header>
-                <p>Load datasets from different subjects and view behavioral results</p>
+              <Segment basic textAlign="left" className={styles.infoSegment}>
+                <Header as="h1">Overview</Header>
+                <p>
+                  Load datasets from different subjects and view behavioral
+                  results
+                </p>
 
                 <div>
-                  <span className='ui header'>Datasets</span>
-                  <Button className='export' onClick={this.saveSelectedDatasets}>
-                    <Icon name='download' />
+                  <span className="ui header">Datasets</span>
+                  <Button
+                    className="export"
+                    onClick={this.saveSelectedDatasets}
+                  >
+                    <Icon name="download" />
                     Export
                   </Button>
                 </div>
-                <p></p>
+                <p />
 
                 <Dropdown
                   fluid
@@ -472,10 +510,10 @@ export default class Analyze extends Component<Props, State> {
                   onChange={this.handleBehaviorDatasetChange}
                   onClick={this.handleDropdownClick}
                 />
-                <p></p>
+                <p />
                 <Divider hidden />
-                <span className='ui header'>Dependent Variable</span>
-                <p></p>
+                <span className="ui header">Dependent Variable</span>
+                <p />
                 <Dropdown
                   fluid
                   selection
@@ -487,19 +525,19 @@ export default class Analyze extends Component<Props, State> {
               </Segment>
             </Grid.Column>
             <Grid.Column width={8} style={{ overflow: 'auto', maxHeight: 650 }}>
-              <Segment basic textAlign='left' className={styles.plotSegment}>
+              <Segment basic textAlign="left" className={styles.plotSegment}>
                 <Plot data={this.state.dataToPlot} layout={this.state.layout} />
-                <p></p>
+                <p />
                 <Checkbox
                   checked={this.state.removeOutliers}
-                  label='Remove outliers'
+                  label="Remove Response Time Outliers"
                   onChange={this.handleRemoveOutliers}
                 />
 
-                <p></p>
+                <p />
                 <Button.Group>
                   <Button
-                    className='tertiary'
+                    className="tertiary"
                     toggle
                     active={this.state.displayMode === 'datapoints'}
                     onClick={() => this.handleDisplayModeChange('datapoints')}
@@ -507,7 +545,7 @@ export default class Analyze extends Component<Props, State> {
                     Data Points
                   </Button>
                   <Button
-                    className='tertiary'
+                    className="tertiary"
                     toggle
                     active={this.state.displayMode === 'errorbars'}
                     onClick={() => this.handleDisplayModeChange('errorbars')}
@@ -515,7 +553,7 @@ export default class Analyze extends Component<Props, State> {
                     Bar Graph
                   </Button>
                   <Button
-                    className='tertiary'
+                    className="tertiary"
                     toggle
                     active={this.state.displayMode === 'whiskers'}
                     onClick={() => this.handleDisplayModeChange('whiskers')}
@@ -524,11 +562,17 @@ export default class Analyze extends Component<Props, State> {
                   </Button>
                 </Button.Group>
 
-                <HelpButton onClick={this.toggleDisplayInfoVisibility} />
+                <Button
+                  circular
+                  icon="question"
+                  className={styles.helpButton}
+                  floated="right"
+                  onClick={this.toggleDisplayInfoVisibility}
+                />
 
                 <Sidebar
-                  width='wide'
-                  direction='right'
+                  width="wide"
+                  direction="right"
                   as={Segment}
                   visible={this.state.isSidebarVisible}
                 >
@@ -538,7 +582,7 @@ export default class Analyze extends Component<Props, State> {
                 </Sidebar>
               </Segment>
             </Grid.Column>
-          </React.Fragment>
+          </Grid>
         );
     }
   }
@@ -547,14 +591,16 @@ export default class Analyze extends Component<Props, State> {
     return (
       <div className={styles.mainContainer}>
         <SecondaryNavComponent
-          title='Analyze'
-          steps={this.props.isEEGEnabled === true ? ANALYZE_STEPS : ANALYZE_STEPS_BEHAVIOR}
+          title="Analyze"
+          steps={
+            this.props.isEEGEnabled === true
+              ? ANALYZE_STEPS
+              : ANALYZE_STEPS_BEHAVIOR
+          }
           activeStep={this.state.activeStep}
           onStepClick={this.handleStepClick}
         />
-        <Grid columns='equal' textAlign='center' verticalAlign='top' className={styles.contentGrid}>
-          {this.renderSectionContent()}
-        </Grid>
+        {this.renderSectionContent()}
       </div>
     );
   }
