@@ -75,6 +75,8 @@
 .closeButton {
   border: none !important;
   box-shadow: none !important;
+  display: grid;
+  justify-content: end;
 }
 
 .previewWindow {

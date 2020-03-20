@@ -1,6 +1,7 @@
+/* eslint-disable react/no-multi-comp */
 import React, { Component } from 'react';
 import { Segment, Header, Menu, Icon, Button, Grid } from 'semantic-ui-react';
-import styles from '../styles/collect.css';
+import styles from '../styles/common.css';
 
 const HELP_STEP = {
   MENU: 0,
@@ -11,7 +12,7 @@ const HELP_STEP = {
   LEARN_BRAIN: 5,
   LEARN_BLINK: 6,
   LEARN_THOUGHTS: 7,
-  LEARN_ALPHA: 8
+  LEARN_ALPHA: 8,
 };
 
 interface Props {
@@ -21,12 +22,14 @@ interface Props {
 interface State {
   helpStep: HELP_STEP;
 }
-export default class HelpSidebar extends Component<Props, State> {
+
+// TODO: Refactor this into a more reusable Sidebar component that can be used in Collect, Clean, and Analyze screen
+export class HelpSidebar extends Component<Props, State> {
   props: Props;
   constructor(props) {
     super(props);
     this.state = {
-      helpStep: HELP_STEP.MENU
+      helpStep: HELP_STEP.MENU,
     };
     this.handleStartLearn = this.handleStartLearn.bind(this);
     this.handleStartSignal = this.handleStartSignal.bind(this);
@@ -61,18 +64,18 @@ export default class HelpSidebar extends Component<Props, State> {
     return (
       <React.Fragment>
         <Menu secondary vertical fluid>
-          <Header className={styles.helpHeader} as="h1">
+          <Header className={styles.helpHeader} as='h1'>
             What would you like to do?
           </Header>
           <Menu.Item onClick={this.handleStartSignal}>
             <Segment basic className={styles.helpMenuItem}>
-              <Icon name="star outline" size="large" />
+              <Icon name='star outline' size='large' />
               Improve the signal quality of your sensors
             </Segment>
           </Menu.Item>
           <Menu.Item onClick={this.handleStartLearn}>
             <Segment basic className={styles.helpMenuItem}>
-              <Icon name="exclamation triangle" size="large" />
+              <Icon name='exclamation triangle' size='large' />
               Learn about how the subjects movements create noise
             </Segment>
           </Menu.Item>
@@ -85,12 +88,12 @@ export default class HelpSidebar extends Component<Props, State> {
     return (
       <React.Fragment>
         <Segment basic className={styles.helpContent}>
-          <Header className={styles.helpHeader} as="h1">
+          <Header className={styles.helpHeader} as='h1'>
             {header}
           </Header>
           {content}
         </Segment>
-        <Grid columns="equal">
+        <Grid columns='equal'>
           <Grid.Column>
             <Button fluid secondary onClick={this.handleBack}>
               Back
@@ -160,13 +163,27 @@ export default class HelpSidebar extends Component<Props, State> {
         <Segment basic className={styles.closeButton}>
           <Button
             circular
-            size="big"
+            size="large"
             icon="x"
             onClick={this.props.handleClose}
           />
         </Segment>
         {this.renderHelpContent()}
       </Segment>
+    );
+  }
+}
+
+export class HelpButton extends Component<{ onClick: () => void }, {}> {
+  render() {
+    return (
+      <Button
+        circular
+        icon='question'
+        className={styles.helpButton}
+        floated='right'
+        onClick={this.props.onClick}
+      />
     );
   }
 }
