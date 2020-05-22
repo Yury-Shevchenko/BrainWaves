@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import clonedeep from 'lodash.clonedeep';
 import * as lab from 'lab.js/dist/lab.dev';
 
+import path from 'path';
 import visualsearch from './scripts/visualsearch';
 import stroop from './scripts/stroop';
 import multitasking from './scripts/multitasking';
@@ -31,11 +32,9 @@ class ExperimentWindow extends Component {
       case 'Faces and Houses':
         faceshouses.parameters = props.settings.params;
         faceshouses.parameters.title = props.settings.title;
-        faceshouses.files = props.settings.params.stimuli
-          .map((image) => ({
-            [`${image.dir}/${image.filename}`]: `${image.dir}/${image.filename}`,
-          }))
-          .reduce((obj, item) => {
+        faceshouses.files = props.settings.params.stimuli.map((image) => ({
+            [path.join(image.dir, image.filename)]: path.join(image.dir, image.filename),
+          })).reduce((obj, item) => {
             obj[Object.keys(item)[0]] = Object.values(item)[0];
             return obj;
           }, {});
@@ -47,7 +46,7 @@ class ExperimentWindow extends Component {
         custom.parameters.title = props.settings.title;
         custom.files = props.settings.params.stimuli
           .map((image) => ({
-            [`${image.dir}/${image.filename}`]: `${image.dir}/${image.filename}`,
+            [path.join(image.dir, image.filename)]: path.join(image.dir, image.filename),
           }))
           .reduce((obj, item) => {
             obj[Object.keys(item)[0]] = Object.values(item)[0];
